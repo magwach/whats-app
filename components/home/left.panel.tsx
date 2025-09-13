@@ -6,7 +6,7 @@ import {
   User,
 } from "lucide-react";
 import { Input } from "../ui/input";
-import ThemeSwitch from "@/utils/theme.switch";
+import ThemeSwitch from "@/utils/providers/theme.switch";
 import Conversation from "./conversation";
 import { conversations } from "@/lib/dummy-data/data";
 export default function LeftPanel() {
