@@ -6,14 +6,11 @@ import { conversations } from "@/lib/dummy-data/data";
 import { UserButton } from "@clerk/nextjs";
 import UserListDialog from "./user.list.dialog";
 import { useState } from "react";
+import { useConvexAuth } from "convex/react";
 
 export default function LeftPanel() {
   const [dialogOpen, setDialogOpen] = useState(false);
-
-
-
-
-
+  const { isAuthenticated } = useConvexAuth();
   return (
     <div className="w-1/4 border-gray-600 border-r">
       <div className="sticky top-0 bg-left-panel z-10">
@@ -22,10 +19,12 @@ export default function LeftPanel() {
           <UserButton />
 
           <div className="flex items-center gap-3">
-            <UserListDialog
-              dialogOpen={dialogOpen}
-              setDialogOpen={setDialogOpen}
-            />
+            {isAuthenticated && (
+              <UserListDialog
+                dialogOpen={dialogOpen}
+                setDialogOpen={setDialogOpen}
+              />
+            )}
             <ThemeSwitch />
           </div>
         </div>

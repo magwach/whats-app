@@ -11,12 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { ImageIcon, MessageSquareDiff } from "lucide-react";
+import { ImageIcon, Loader, MessageSquareDiff } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { users } from "@/lib/dummy-data/data";
 import { Id } from "@/convex/_generated/dataModel";
-import { DialogClose } from "@radix-ui/react-dialog";
+import toast from "react-hot-toast";
 
 export default function UserListDialog({
   dialogOpen,
@@ -33,6 +32,7 @@ export default function UserListDialog({
   const imgRef = useRef<HTMLInputElement>(null);
 
   const createConversation = useMutation(api.conversations.createConversation);
+  const generateUploadUrl = useMutation(api.conversations.generateUploadUrl);
   const me = useQuery(api.users.getMe);
   const users = useQuery(api.users.getUsers);
 
@@ -49,15 +49,40 @@ export default function UserListDialog({
           participants: [...selectedUsers, me?._id!],
           isGroup,
         });
+      } else {
+        const postUrl = await generateUploadUrl();
+
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedImage?.type! },
+          body: selectedImage,
+        });
+
+        const { storageId } = await result.json();
+
+        await createConversation({
+          participants: [...selectedUsers, me?._id!],
+          isGroup,
+          admin: me?._id!,
+          groupName,
+          groupImage: storageId,
+        });
       }
+
+      setSelectedUsers([]);
+      setDialogOpen(false);
+      setGroupName("");
+      setSelectedImage(null);
     } catch (error) {
+      toast.error("Something went wrong");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!selectedImage) {
+    if (!selectedImage || selectedUsers.length < 2) {
       setRenderedImage("");
       return;
     }
@@ -66,7 +91,7 @@ export default function UserListDialog({
     setRenderedImage(objectUrl);
 
     return () => URL.revokeObjectURL(objectUrl);
-  }, [selectedImage]);
+  }, [selectedImage, selectedUsers]);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -170,11 +195,7 @@ export default function UserListDialog({
             onClick={() => handleCreateConverstaion()}
           >
             {/* spinner */}
-            {isLoading ? (
-              <div className="w-5 h-5 border-t-2 border-b-2  rounded-full animate-spin" />
-            ) : (
-              "Create"
-            )}
+            {isLoading ? <Loader className="animate-spin" /> : "Create"}
           </Button>
         </div>
       </DialogContent>

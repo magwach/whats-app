@@ -4,6 +4,7 @@ import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ReactNode } from "react";
+import { Toaster } from "react-hot-toast";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -14,6 +15,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         {children}
+        <Toaster />
       </ConvexProviderWithClerk>
     </ClerkProvider>
   );
