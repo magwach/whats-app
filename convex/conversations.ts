@@ -44,7 +44,7 @@ export const createConversation = mutation({
 });
 
 export const getMyConversations = query({
-  args: {},
+  args: { conversationId: v.optional(v.id("conversations")) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
 
@@ -82,6 +82,25 @@ export const getMyConversations = query({
           userDetails = userProfile[0];
         }
 
+        const participantProfile = await Promise.all(
+          conversation.participants.map(async (participantId) => {
+            const userProfile = await ctx.db
+              .query("users")
+              .filter((q) => q.eq(q.field("_id"), participantId))
+              .unique();
+
+            if (userProfile === null) return null;
+
+            return {
+              email: userProfile.email,
+              name: userProfile.name,
+              image: userProfile.image,
+              isOnline: userProfile.isOnline,
+              _id: userProfile._id,
+            };
+          })
+        );
+
         const lastMessage = await ctx.db
           .query("messages")
           .filter((q) => q.eq(q.field("conversation"), conversation._id))
@@ -91,10 +110,16 @@ export const getMyConversations = query({
         return {
           ...userDetails,
           ...conversation,
+          participants: participantProfile.filter((p) => p !== null),
           lastMessage: lastMessage[0]!,
         };
       })
     );
+    if (args.conversationId) {
+      return conversationsWithDetails.filter(
+        (conversation) => conversation._id === args.conversationId
+      );
+    }
     return conversationsWithDetails;
   },
 });

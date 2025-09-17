@@ -14,7 +14,7 @@ export default function LeftPanel() {
 
   const conversations = useQuery(
     api.conversations.getMyConversations,
-    isAuthenticated ? undefined : "skip"
+    isAuthenticated ? {} : "skip"
   );
   console.log(conversations);
   return (

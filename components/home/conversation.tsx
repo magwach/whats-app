@@ -4,8 +4,13 @@ import { MessageSeenSvg } from "@/lib/svgs";
 import { ImageIcon, Users, VideoIcon } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Conversation, useConversationStore } from "@/stores/chat.store";
 
-export default function Conversation({ conversation }: { conversation: any }) {
+export default function ConversationComponent({
+  conversation,
+}: {
+  conversation: Conversation;
+}) {
   const conversationImage = conversation.groupImage || conversation?.image;
   const conversationName =
     conversation?.groupName ||
@@ -14,12 +19,20 @@ export default function Conversation({ conversation }: { conversation: any }) {
   const lastMessage = conversation.lastMessage;
   const lastMessageType = lastMessage?.messageType;
 
+  const { setSelectedConversation, selectedConversation } =
+    useConversationStore();
+
+  const activeConversation = selectedConversation?._id === conversation._id;
+
   const me = useQuery(api.users.getMe);
 
   return (
     <>
       <div
-        className={`flex gap-2 items-center p-3 hover:bg-chat-hover cursor-pointer `}
+        className={`flex gap-2 items-center p-3 hover:bg-chat-hover cursor-pointer ${activeConversation ? "bg-gray-200 dark:bg-gray-700" : ""} `}
+        onClick={() => {
+          setSelectedConversation(conversation);
+        }}
       >
         <Avatar className="border border-gray-900 overflow-visible relative">
           {conversation.isOnline && (
@@ -48,13 +61,15 @@ export default function Conversation({ conversation }: { conversation: any }) {
             {lastMessage?.sender === me?._id ? <MessageSeenSvg /> : ""}
             {conversation.isGroup && <Users size={16} />}
             {!lastMessage && "Say Hi!"}
-            {lastMessageType === "text" && lastMessage?.content.length > 30 ? (
-              <span className="text-xs">
-                {lastMessage?.content.slice(0, 30)}...
-              </span>
-            ) : (
-              <span className="text-xs">{lastMessage?.content}</span>
-            )}
+            {lastMessage?.messageType === "text" &&
+              (lastMessage?.content?.length &&
+              lastMessage.content.length > 30 ? (
+                <span className="text-xs">
+                  {lastMessage.content.slice(0, 30)}...
+                </span>
+              ) : (
+                <span className="text-xs">{lastMessage?.content ?? ""}</span>
+              ))}
             {lastMessageType === "image" && <ImageIcon size={16} />}
             {lastMessageType === "video" && <VideoIcon size={16} />}
           </p>

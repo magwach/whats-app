@@ -12,11 +12,11 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { ImageIcon, Loader, MessageSquareDiff } from "lucide-react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import toast from "react-hot-toast";
-
+import { useConversationStore } from "@/stores/chat.store";
 export default function UserListDialog({
   dialogOpen,
   setDialogOpen,
@@ -31,10 +31,13 @@ export default function UserListDialog({
   const [renderedImage, setRenderedImage] = useState("");
   const imgRef = useRef<HTMLInputElement>(null);
 
+  const convex = useConvex();
   const createConversation = useMutation(api.conversations.createConversation);
   const generateUploadUrl = useMutation(api.conversations.generateUploadUrl);
   const me = useQuery(api.users.getMe);
   const users = useQuery(api.users.getUsers);
+
+  const { setSelectedConversation } = useConversationStore();
 
   const handleCreateConverstaion = async () => {
     if (selectedUsers.length === 0) return;
@@ -60,7 +63,7 @@ export default function UserListDialog({
 
         const { storageId } = await result.json();
 
-        await createConversation({
+        conversationId = await createConversation({
           participants: [...selectedUsers, me?._id!],
           isGroup,
           admin: me?._id!,
@@ -68,7 +71,20 @@ export default function UserListDialog({
           groupImage: storageId,
         });
       }
-
+      try {
+        const conversations = await convex.query(
+          api.conversations.getMyConversations,
+          {
+            conversationId,
+          }
+        );
+        if (conversations === undefined) {
+          throw new Error("No conversations found");
+        }
+        setSelectedConversation(conversations[0]);
+      } catch (error) {
+        throw error;
+      }
       setSelectedUsers([]);
       setDialogOpen(false);
       setGroupName("");
