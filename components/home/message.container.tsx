@@ -14,7 +14,11 @@ export default function MessageContainer() {
       <div className="mx-12 flex flex-col gap-3 h-full">
         {messages?.map((msg, idx) => (
           <div key={msg._id}>
-            <ChatBubble me={me} message={msg} />
+            <ChatBubble
+              me={me}
+              message={msg}
+              previousMessage={idx > 0 ? messages[idx - 1] : null}
+            />
           </div>
         ))}
       </div>

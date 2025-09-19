@@ -166,7 +166,7 @@
 
   --container: hsl(202, 31%, 7%);
 
-  --gray-primary: hsl(202, 23%, 16%);
+  --gray-primary: #1f2b32;
   --gray-secondary: hsl(202, 22%, 17%);
 
   --left-panel: hsl(203, 32%, 10%);
@@ -174,7 +174,7 @@
 
   --green-primary: oklch(65.094% 0.12827 170.458);
   --green-secondary: hsl(165, 100%, 39%);
-  --green-chat: hsl(169, 100%, 18%);
+  --green-chat: #005c4b;
 
   --gray-tertiary: hsl(203, 22%, 21%);
   /* CLASSES ADDED BY US */
