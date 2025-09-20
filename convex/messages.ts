@@ -90,3 +90,67 @@ export const getConversationMessages = query({
     return messagesWithSender;
   },
 });
+
+export const sendImage = mutation({
+  args: {
+    conversation: v.id("conversations"),
+    imgId: v.id("_storage"),
+    sender: v.string(),
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique();
+    if (!user) {
+      throw new ConvexError("Unauthorized");
+    }
+    const content = (await ctx.storage.getUrl(args.imgId)) as string;
+
+    await ctx.db.insert("messages", {
+      conversation: args.conversation,
+      sender: args.sender,
+      content,
+      messageType: "image",
+    });
+  },
+});
+
+export const sendVideo = mutation({
+  args: {
+    conversation: v.id("conversations"),
+    videoId: v.id("_storage"),
+    sender: v.string(),
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique();
+    if (!user) {
+      throw new ConvexError("Unauthorized");
+    }
+    const content = (await ctx.storage.getUrl(args.videoId)) as string;
+    await ctx.db.insert("messages", {
+      conversation: args.conversation,
+      sender: args.sender,
+      content,
+      messageType: "video",
+    });
+  },
+});

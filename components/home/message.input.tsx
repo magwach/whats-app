@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { useConversationStore } from "@/stores/chat.store";
 import useComponentVisible from "@/hooks/use.component.visible";
 import EmojiPicker, { Theme } from "emoji-picker-react";
+import MediaDropdown from "./media.dropdown";
 
 export default function MessageInput() {
   const [msgText, setMsgText] = useState("");
@@ -57,13 +58,13 @@ export default function MessageInput() {
           <Laugh
             className={
               !isComponentVisible
-                ? "text-gray-600 dark:text-gray-40 cursor-pointer"
+                ? "text-gray-600 dark:text-gray-400 cursor-pointer"
                 : "text-green-500 dark:text-green-300 cursor-pointer"
             }
             onClick={() => setIsComponentVisible(!isComponentVisible)}
           />
         </div>
-        <Plus className="text-gray-600 dark:text-gray-400" />
+        <MediaDropdown />
       </div>
       <form
         className="w-full flex gap-3"
