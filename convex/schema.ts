@@ -17,7 +17,7 @@ export default defineSchema({
     participants: v.array(v.string()),
     admin: v.optional(v.id("users")),
   }),
-  
+
   messages: defineTable({
     conversation: v.id("conversations"),
     sender: v.string(), // should be string so that it doesn't throw errors in openai part ("ChatGPT")
@@ -25,7 +25,8 @@ export default defineSchema({
     messageType: v.union(
       v.literal("text"),
       v.literal("image"),
-      v.literal("video")
+      v.literal("video"),
+      v.literal("audio")
     ),
   }).index("by_conversation", ["conversation"]),
 });

@@ -2,10 +2,16 @@ import { MessageSeenSvg } from "@/lib/svgs";
 import { IMessage, useConversationStore } from "@/stores/chat.store";
 import ChatBubbleAvatar from "./chat.bubble.avatar";
 import DateIndicator from "./date.indicator";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "../ui/dialog";
 import Image from "next/image";
 import ReactPlayer from "react-player";
 import { useState } from "react";
+import ChatAvatarActions from "./chat.avatar.actions";
 
 export default function ChatBubble({
   message,
@@ -29,7 +35,7 @@ export default function ChatBubble({
     ) || false;
   const fromMe = message.sender?._id === me._id;
 
-  const bubbleBg = fromMe
+  const bgClass = fromMe
     ? "bg-[#005c4b] text-white"
     : "bg-white dark:bg-[#1f2b32] text-gray-900 dark:text-gray-100";
   const alignment = fromMe ? "justify-end" : "justify-start";
@@ -46,37 +52,50 @@ export default function ChatBubble({
         );
       case "video":
         return <VideoMessage message={message} />;
+      case "audio":
+        return <AudioMessage message={message} />;
       default:
         return null;
     }
   };
 
+  if (!fromMe) {
+    return (
+      <>
+        <DateIndicator message={message} previousMessage={previousMessage} />
+        <div className="flex gap-1 w-2/3">
+          <ChatBubbleAvatar
+            isGroup={isGroup}
+            isMember={isMember}
+            message={message}
+          />
+          <div
+            className={`flex flex-col z-20 max-w-fit px-2 pt-1 rounded-md shadow-md relative ${bgClass}`}
+          >
+            {<ChatAvatarActions message={message} me={me} />}
+            {renderMessageContent()}
+            {open && (
+              <ImageDialog
+                src={message.content}
+                open={open}
+                onClose={() => setOpen(false)}
+              />
+            )}
+            <MessageTime time={time} fromMe={fromMe} />
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
-      {/* Date indicator always centered */}
       <DateIndicator message={message} previousMessage={previousMessage} />
 
-      {/* Message row */}
-      <div className={`flex ${alignment} items-end w-full mb-1`}>
-        {/* Show avatar only for group & not me */}
-
-        <div className="mr-2">
-          <ChatBubbleAvatar
-            message={message}
-            isMember={isMember}
-            isGroup={selectedConversation?.isGroup}
-          />
-        </div>
-
-        {/* Bubble */}
+      <div className="flex gap-1 w-2/3 ml-auto">
         <div
-          className={`relative max-w-[75%] px-3 py-2 rounded-lg shadow ${bubbleBg}`}
+          className={`flex flex-col  z-20 max-w-fit px-2 pt-1 rounded-md shadow-md ml-auto relative ${bgClass}`}
         >
-          {fromMe && isGroup ? (
-            <SelfMessageIndicator />
-          ) : (
-            <OtherMessageIndicator />
-          )}
           {renderMessageContent()}
           {open && (
             <ImageDialog
@@ -91,14 +110,6 @@ export default function ChatBubble({
     </>
   );
 }
-
-const OtherMessageIndicator = () => (
-  <div className="absolute bg-white dark:bg-[#1f2b32] bottom-0 -left-2 w-3 h-3 rounded-bl-lg" />
-);
-
-const SelfMessageIndicator = () => (
-  <div className="absolute bg-[#005c4b] bottom-0 -right-2 w-3 h-3 rounded-br-lg" />
-);
 
 const TextMessage = ({ message }: { message: IMessage }) => {
   const linkRegex = /(https?:\/\/[^\s]+)/g;
@@ -153,6 +164,14 @@ const ImageMessage = ({
         alt="image"
         onClick={handleClick}
       />
+    </div>
+  );
+};
+
+const AudioMessage = ({ message }: { message: IMessage }) => {
+  return (
+    <div className="flex items-center gap-2 max-w-xs">
+      <audio controls src={message.content} />
     </div>
   );
 };

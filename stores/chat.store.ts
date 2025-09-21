@@ -20,14 +20,7 @@ export type Conversation = {
   admin?: Id<"users">;
   isOnline?: boolean;
   email?: string;
-  lastMessage?: {
-    _id: Id<"messages">;
-    conversation: Id<"conversations">;
-    content: string | null;
-    sender: string;
-    messageType?: "text" | "image" | "video";
-    _creationTime: number;
-  };
+  lastMessage?: IMessage;
   _creationTime: number;
 };
 
@@ -35,7 +28,7 @@ export interface IMessage {
   _id: string;
   content: string;
   _creationTime: number;
-  messageType: "text" | "image" | "video";
+  messageType: "text" | "image" | "video" | "audio";
   sender: {
     _id: Id<"users">;
     image: string;

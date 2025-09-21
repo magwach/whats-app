@@ -59,19 +59,34 @@ export const getMyConversations = query({
 
     if (!user) throw new ConvexError("Unauthorized");
 
-    const conversations = await ctx.db.query("conversations").collect();
+    let myConversation: any[] = [];
 
-    const myConversations = conversations.filter((c) => {
-      return c.participants.includes(user._id);
-    });
+    if (args.conversationId) {
+      const conversation = await ctx.db
+        .query("conversations")
+        .filter((q) => q.eq(q.field("_id"), args.conversationId))
+        .first();
+
+      if (!myConversation) {
+        throw new ConvexError("Conversation not found");
+      }
+
+      myConversation = [conversation];
+    } else {
+      const allConversations = await ctx.db.query("conversations").collect();
+
+      myConversation = allConversations.filter((c) => {
+        return c.participants.includes(user._id);
+      });
+    }
 
     const conversationsWithDetails = await Promise.all(
-      myConversations.map(async (conversation) => {
+      myConversation.map(async (conversation) => {
         let userDetails = {};
 
         if (!conversation.isGroup) {
           const otherUserId = conversation.participants.find(
-            (id) => id !== user._id
+            (id: string) => id !== user._id
           );
 
           const userProfile = await ctx.db
@@ -83,7 +98,7 @@ export const getMyConversations = query({
         }
 
         const participantProfile = await Promise.all(
-          conversation.participants.map(async (participantId) => {
+          conversation.participants.map(async (participantId: string) => {
             const userProfile = await ctx.db
               .query("users")
               .filter((q) => q.eq(q.field("_id"), participantId))
@@ -115,12 +130,53 @@ export const getMyConversations = query({
         };
       })
     );
-    if (args.conversationId) {
-      return conversationsWithDetails.filter(
-        (conversation) => conversation._id === args.conversationId
-      );
-    }
     return conversationsWithDetails;
+  },
+});
+
+export const kickUserFromGroup = mutation({
+  args: { conversationId: v.id("conversations"), userId: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Unauthorized");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique();
+
+    if (!user) throw new ConvexError("Unauthorized");
+
+    const conversation = await ctx.db
+      .query("conversations")
+      .filter((q) => q.eq(q.field("_id"), args.conversationId))
+      .unique();
+
+    if (!conversation) throw new ConvexError("Conversation not found");
+
+    if (!conversation.isGroup)
+      throw new ConvexError("Cannot kick user from a one-on-one conversation");
+
+    if (!conversation.admin)
+      throw new ConvexError("Group does not have an admin assigned");
+
+    if (conversation.admin !== user._id)
+      throw new ConvexError("Only the group admin can kick users");
+
+    if (!conversation.participants.includes(args.userId))
+      throw new ConvexError("User is not a participant of the group");
+
+    const updatedParticipants = conversation.participants.filter(
+      (id) => id !== args.userId
+    );
+
+    await ctx.db.patch(args.conversationId, {
+      participants: updatedParticipants,
+    });
+
+    return { success: true };
   },
 });
 

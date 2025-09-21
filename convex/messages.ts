@@ -154,3 +154,70 @@ export const sendVideo = mutation({
     });
   },
 });
+
+export const sendAudio = mutation({
+  args: {
+    conversation: v.id("conversations"),
+    audioId: v.id("_storage"),
+    sender: v.string(),
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique();
+    if (!user) {
+      throw new ConvexError("Unauthorized");
+    }
+    const content = (await ctx.storage.getUrl(args.audioId)) as string;
+    await ctx.db.insert("messages", {
+      conversation: args.conversation,
+      sender: args.sender,
+      content,
+      messageType: "audio",
+    });
+  },
+});
+
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique();
+    if (!user) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const message = await ctx.db
+      .query("messages")
+      .filter((q) => q.eq(q.field("_id"), args.messageId))
+      .first();
+    if (!message) {
+      throw new ConvexError("Message not found");
+    }
+    if (message.sender !== user._id && message.sender !== "ChatGPT") {
+      throw new ConvexError("You are not the sender of this message");
+    }
+
+    await ctx.db.delete(args.messageId);
+  },
+});
