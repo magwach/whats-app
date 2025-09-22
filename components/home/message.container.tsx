@@ -52,7 +52,7 @@ export default function MessageContainer() {
       ref={containerRef}
       className="relative p-3 flex-1 overflow-auto h-full bg-chat-tile-light dark:bg-chat-tile-dark"
     >
-      <div className="mx-12 flex flex-col gap-3 h-full">
+      <div className="mx-12 flex flex-col gap-3">
         {messages?.map((msg, idx) => (
           <div key={msg._id}>
             <ChatBubble
@@ -62,16 +62,17 @@ export default function MessageContainer() {
             />
           </div>
         ))}
+        {/* The real bottom marker */}
+        <div ref={bottomRef} className="h-1" />
       </div>
-      <div className="absolute bottom-0" ref={bottomRef} />
 
       {/* Floating scroll button */}
       {showScrollButton && (
         <button
           onClick={scrollToBottom}
           className="fixed bottom-20 right-8 z-50 p-3 rounded-full 
-               bg-gray-600 hover:bg-gray-600 text-white shadow-lg 
-               transition duration-200 cursor-pointer"
+           bg-gray-600 hover:bg-gray-700 text-white shadow-lg 
+           transition duration-200 cursor-pointer"
         >
           <ChevronDown size={22} />
         </button>

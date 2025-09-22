@@ -1,5 +1,7 @@
 import { MessageSeenSvg } from "@/lib/svgs";
 import { IMessage, useConversationStore } from "@/stores/chat.store";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import ChatBubbleAvatar from "./chat.bubble.avatar";
 import DateIndicator from "./date.indicator";
 import {
@@ -112,26 +114,38 @@ export default function ChatBubble({
 }
 
 const TextMessage = ({ message }: { message: IMessage }) => {
-  const linkRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = message.content.split(linkRegex);
-
   return (
-    <div className="text-sm leading-relaxed break-words">
-      {parts.map((part, i) =>
-        linkRegex.test(part) ? (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-300 underline"
-          >
-            {part}
-          </a>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
+    <div className="text-sm leading-relaxed break-words prose prose-invert max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({ node, ...props }) => (
+            <a
+              {...props}
+              className="text-blue-400 underline hover:text-blue-300"
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          ),
+          h1: ({ node, ...props }) => (
+            <h1 {...props} className="text-2xl font-bold mt-3 mb-2" />
+          ),
+          h2: ({ node, ...props }) => (
+            <h2 {...props} className="text-xl font-semibold mt-2 mb-1" />
+          ),
+          h3: ({ node, ...props }) => (
+            <h3 {...props} className="text-lg font-medium mt-2 mb-1" />
+          ),
+          li: ({ node, ...props }) => (
+            <li {...props} className="list-disc list-inside" />
+          ),
+          strong: ({ node, ...props }) => (
+            <strong {...props} className="font-semibold text-foreground" />
+          ),
+        }}
+      >
+        {message.content}
+      </ReactMarkdown>
     </div>
   );
 };

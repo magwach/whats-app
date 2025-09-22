@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 
 export const sendTextMessage = mutation({
   args: {
@@ -40,6 +41,28 @@ export const sendTextMessage = mutation({
       content: args.content,
       messageType: "text",
     });
+
+    if (args.content.startsWith("@grok")) {
+      await ctx.scheduler.runAfter(0, api.openai.chat, {
+        message: args.content.replace("@grok", "").trim(),
+        conversationId: args.conversationId,
+      });
+    }
+  },
+});
+
+export const sendChatGPTMessage = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("messages", {
+      conversation: args.conversationId,
+      sender: "Grok",
+      content: args.content,
+      messageType: "text",
+    });
   },
 });
 
@@ -64,10 +87,9 @@ export const getConversationMessages = query({
 
     const messagesWithSender = await Promise.all(
       messages.map(async (message) => {
-        if (message.sender === "ChatGPT") {
-          const image =
-            message.messageType === "text" ? "/gpt.png" : "dall-e.png";
-          return { ...message, sender: { name: "ChatGPT", image } };
+        if (message.sender === "Grok") {
+          const image = "./grok.png";
+          return { ...message, sender: { name: "Grok", image } };
         }
         let sender;
         // Check if sender profile is in cache

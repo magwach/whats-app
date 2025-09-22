@@ -21,7 +21,7 @@ const ChatAvatarActions = ({ me, message }: ChatAvatarActionsProps) => {
   );
   const kickUser = useMutation(api.conversations.kickUserFromGroup);
   const createConversation = useMutation(api.conversations.createConversation);
-  const fromAI = message.sender?.name === "ChatGPT";
+  const fromAI = message.sender?.name === "Grok";
   const isGroup = selectedConversation?.isGroup;
 
   const handleKickUser = async (e: React.MouseEvent) => {

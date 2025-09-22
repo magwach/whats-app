@@ -20,7 +20,7 @@ export default defineSchema({
 
   messages: defineTable({
     conversation: v.id("conversations"),
-    sender: v.string(), // should be string so that it doesn't throw errors in openai part ("ChatGPT")
+    sender: v.string(),
     content: v.string(),
     messageType: v.union(
       v.literal("text"),
