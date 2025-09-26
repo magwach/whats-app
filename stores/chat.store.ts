@@ -21,6 +21,7 @@ export type Conversation = {
   isOnline?: boolean;
   email?: string;
   lastMessage?: IMessage;
+  videoRoomUrl?: string;
   _creationTime: number;
 };
 

@@ -180,6 +180,24 @@ export const kickUserFromGroup = mutation({
   },
 });
 
+export const updateConversationRoomURL = mutation({
+  args: { conversationId: v.id("conversations"), roomUrl: v.string() },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db
+      .query("conversations")
+      .filter((q) => q.eq(q.field("_id"), args.conversationId))
+      .unique();
+
+    if (!conversation) throw new ConvexError("Conversation not found");
+
+    await ctx.db.patch(args.conversationId, {
+      videoRoomUrl: args.roomUrl,
+    });
+
+    return { success: true };
+  },
+});
+
 export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
 });

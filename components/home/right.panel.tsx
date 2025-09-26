@@ -6,8 +6,19 @@ import MessageContainer from "./message.container";
 import ChatPlaceHolder from "./chat.placeholder";
 import GroupMembersDialog from "./group.members.dialog";
 import { useConversationStore } from "@/stores/chat.store";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import toast from "react-hot-toast";
+
+import { useRouter } from "next/navigation";
 
 export default function RightPanel() {
+  const router = useRouter();
+
+  const setConversationRoomURL = useMutation(
+    api.conversations.updateConversationRoomURL
+  );
+
   const { selectedConversation, setSelectedConversation } =
     useConversationStore();
   if (!selectedConversation) return <ChatPlaceHolder />;
@@ -16,6 +27,28 @@ export default function RightPanel() {
     selectedConversation.groupName || selectedConversation.name;
 
   const isGroup = selectedConversation.isGroup;
+
+  const handleVideoClick = async () => {
+    let roomUrl = selectedConversation.videoRoomUrl as string;
+
+    if (!roomUrl) {
+      try {
+        const res = await fetch("/api/create-room", { method: "POST" });
+        const data = await res.json();
+        console.log(data);
+        roomUrl = data.url;
+
+        await setConversationRoomURL({
+          conversationId: selectedConversation._id,
+          roomUrl: roomUrl!,
+        });
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to create video room");
+      }
+    }
+    window.open(`/video-call?room=${encodeURIComponent(roomUrl)}`, "_blank");
+  };
 
   return (
     <div className="w-3/4 flex flex-col">
@@ -39,17 +72,17 @@ export default function RightPanel() {
             <div className="flex flex-col">
               <p>{conversationName}</p>
               {isGroup && (
-                <GroupMembersDialog
-                  users={selectedConversation.participants}
-                />
+                <GroupMembersDialog users={selectedConversation.participants} />
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-7 mr-5">
-            <a href="/video-call" target="_blank">
-              <Video size={23} />
-            </a>
+            <Video
+              size={23}
+              className="cursor-pointer"
+              onClick={handleVideoClick}
+            />{" "}
             <X
               size={16}
               className="cursor-pointer"
