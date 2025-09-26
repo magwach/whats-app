@@ -54,7 +54,7 @@ export default function MessageContainer() {
     >
       <div className="mx-12 flex flex-col gap-3">
         {messages?.map((msg, idx) => (
-          <div key={msg._id}>
+          <div key={msg._id} ref={bottomRef}>
             <ChatBubble
               me={me}
               message={msg}
@@ -62,8 +62,6 @@ export default function MessageContainer() {
             />
           </div>
         ))}
-        {/* The real bottom marker */}
-        <div ref={bottomRef} className="h-1" />
       </div>
 
       {/* Floating scroll button */}
