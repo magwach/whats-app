@@ -54,16 +54,6 @@ bun dev
 Open http://localhost:3000 in your browser to see the application.
 You can start editing the application by modifying app/page.tsx. The page will auto-update as you edit the file.
 
-### 📁 Project Structure
-
-whats-app/
-├── app/              # Next.js app directory
-│   └── page.tsx      # Main page component
-├── public/           # Static assets
-├── node_modules/     # Dependencies
-├── package.json      # Project metadata and dependencies
-└── README.md         # Project documentation
-
 ### 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
